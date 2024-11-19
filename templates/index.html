@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Умный список дел</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .task {
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .task:hover {
+            transform: translateX(10px);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        .priority-high { border-left: 4px solid #dc3545; }
+        .priority-medium { border-left: 4px solid #ffc107; }
+        .priority-low { border-left: 4px solid #28a745; }
+        .done { background-color: #f8f9fa; }
+        .done .task-title { text-decoration: line-through; }
+        .overdue { background-color: #fff3f3; }
+        .overdue::after {
+            content: "Просрочено!";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: #dc3545;
+            font-size: 0.8rem;
+        }
+        .stats-card {
+            border-radius: 15px;
+            transition: all 0.3s;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3>{{printf "%.1f" .Stats.CompletedRate}}%</h3>
+                        <p class="mb-0">Выполнено</p>
+                        <small>{{.Stats.CompletedTasks}} задач</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h3>{{printf "%.1f" .Stats.OverdueRate}}%</h3>
+                        <p class="mb-0">Просрочено</p>
+                        <small>{{.Stats.OverdueTasks}} задач</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-warning">
+                    <div class="card-body text-center">
+                        <h3>{{printf "%.1f" .Stats.PendingRate}}%</h3>
+                        <p class="mb-0">В процессе</p>
+                        <small>{{.Stats.PendingTasks}} задач</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3>{{.Stats.TotalTasks}}</h3>
+                        <p class="mb-0">Всего задач</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <form action="/add" method="POST" class="mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" name="title" class="form-control" placeholder="Новая задача" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="datetime-local" name="deadline" class="form-control" required>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="priority" class="form-select">
+                                <option value="high">Высокий</option>
+                                <option value="medium">Средний</option>
+                                <option value="low">Низкий</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary w-100">+</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="btn-group">
+                    <a href="/sort/deadline" class="btn btn-outline-secondary">По сроку</a>
+                    <a href="/sort/priority" class="btn btn-outline-secondary">По приоритету</a>
+                    <a href="/sort/status" class="btn btn-outline-secondary">По статусу</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="tasks">
+            {{range .Tasks}}
+            <div class="card mb-2 task priority-{{.Priority}} {{if .Done}}done{{else if .IsOverdue}}overdue{{end}}">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <a href="/toggle/{{.ID}}" class="btn btn-outline-success btn-sm">
+                                {{if .Done}}✓{{else}}○{{end}}
+                            </a>
+                        </div>
+                        <div class="col">
+                            <h5 class="card-title task-title mb-0">{{.Title}}</h5>
+                            <small class="text-muted">
+                                Срок: {{.Deadline.Format "02.01.2006 15:04"}}
+                            </small>
+                        </div>
+                        <div class="col-auto">
+                            <a href="/delete/{{.ID}}" class="btn btn-outline-danger btn-sm">✕</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
